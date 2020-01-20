@@ -86,7 +86,8 @@ export default function App() {
 
   return (
     <div className="App">
-      <h1>Hello CodeSandbox</h1>
+      <h1>Select area component</h1>
+      <h4>Mouse over each item to select it</h4>
       <div
         ref={refContainer}
         className="selectable-group"
