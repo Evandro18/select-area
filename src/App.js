@@ -1,13 +1,13 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import "./styles.css";
+import clxs from 'clsx'
 import List from "./listComponent";
-// import WithRef from "./WithRef";
 import Context from "./context";
 export default function App() {
   const ref = useRef();
   const refContainer = useRef();
   const [isSelecting, setSelecting] = useState(false)
-  const [selectedItems, setItems] = useState([]);
+  const [selectingItems, setItems] = useState([]);
   const [typedItems, setTypedItems] = useState([]);
   const [boundBox, setBoundBox] = useState({x1: 0, x2: 0, y1: 0, y2: 0 })
   const registerSelectedItem = useCallback((ref, props) => {
@@ -16,6 +16,10 @@ export default function App() {
 
   const registerSelected = useCallback(({ref, props}) => {
     setItems(oldItems => !oldItems.find(el => el.ref.current === ref.current) ? [...oldItems, {ref, props}] : oldItems);
+  }, []);
+
+  const registerSelectedMultiple = useCallback((list) => {
+    setItems(list);
   }, []);
 
   const setBoundsValue = useCallback(({ x1, x2, y1, y2 }) => {
@@ -43,10 +47,26 @@ export default function App() {
     setBoundsValue({ x1, x2, y1, y2 })
   }, [setBoundsValue])
 
+  const doObjectCollide = () => {
+    const { offsetTop: top, offsetLeft: left, offsetWidth: width, offsetHeight: height } = ref.current && ref.current
+    const items = typedItems.filter(item => {
+      if (!item || !item.ref || !item.ref.current) return false
+      const { ref } = item
+      const { offsetTop: itemTop, offsetLeft: itemLeft, offsetWidth: itemWidth, offsetHeight: itemHeigth } = ref.current
+      if (itemLeft < left + width &&
+        itemLeft + itemWidth > left &&
+        itemTop < top + height &&
+        top + height > itemTop){
+          return true
+        }
+        return false
+    })
+    registerSelectedMultiple(items)
+  }
+
   const onMouseUp = useCallback(ev => {
     ev.stopPropagation();
     setSelecting(false)
-    // setItems([])
     if (ref.current) {
       ref.current.style.width = '0px'
       ref.current.style.height = '0px'
@@ -60,11 +80,8 @@ export default function App() {
     const { target } = ev
     ev.stopPropagation();
     if (isSelecting) {
+      doObjectCollide()
       updateBoundBox({...boundBox, x2: ev.clientX, y2: ev.clientY})
-      const found = typedItems.find(el => el.ref.current === target);
-      if (found) {
-        registerSelected({ ref: found.ref, props: found.props });
-      }
     }
   }, [isSelecting, updateBoundBox, registerSelected, boundBox, typedItems])
 
@@ -73,8 +90,7 @@ export default function App() {
     setItems([])
     ev.stopPropagation();
     setSelecting(true)
-    const found = typedItems.find(el => el.ref.current === target);
-    if (found) registerSelected({ ref: found.ref, props: found.props });
+    doObjectCollide()
     updateBoundBox({ ...boundBox, x1: rest.clientX, y1: rest.clientY })
   }, [updateBoundBox, registerSelected, boundBox, typedItems])
 
@@ -85,9 +101,8 @@ export default function App() {
   }, [onMouseUp, onMouseMove]);
 
   return (
-    <div className="App">
+    <div className={clxs('App', 'noselect')}>
       <h1>Select area component</h1>
-      <h4>Mouse over each item to select it</h4>
       <div
         ref={refContainer}
         className="selectable-group"
@@ -106,12 +121,12 @@ export default function App() {
       </div>
       <div>
         <span style={{fontSize: 18}}>Item selecionados: </span>
-        {!isSelecting && selectedItems.map((el, i) => (
+        {!isSelecting && selectingItems.map((el, i) => (
           <span key={i} style={{ fontSize: 16, fontWeight: 'bold', margin: '2rem'}}>{el.props.value}</span>
         ))}
       </div>
 
-      <div ref={ref} className="selector" style={{ cursor: 'default' }}/>
+      <div ref={ref} className={clxs('selector', 'noselect')} style={{ cursor: 'default' }}/>
     </div>
   );
 }
