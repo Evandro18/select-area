@@ -77,7 +77,6 @@ export default function App() {
   }, [setBoundsValue])
 
   const onMouseMove = useCallback((ev) => {
-    const { target } = ev
     ev.stopPropagation();
     if (isSelecting) {
       doObjectCollide()
@@ -121,7 +120,7 @@ export default function App() {
       </div>
       <div>
         <span style={{fontSize: 18}}>Item selecionados: </span>
-        {!isSelecting && selectingItems.map((el, i) => (
+        {selectingItems && selectingItems.map((el, i) => (
           <span key={i} style={{ fontSize: 16, fontWeight: 'bold', margin: '2rem'}}>{el.props.value}</span>
         ))}
       </div>
