@@ -1,4 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import debounce from 'lodash/debounce'
+import isEqual from 'lodash/isEqual'
 import "./styles.css";
 import clxs from 'clsx'
 import List from "./listComponent";
@@ -8,15 +10,22 @@ export default function App() {
   const refContainer = useRef();
   const [isSelecting, setSelecting] = useState(false)
   const [selectingItems, setItems] = useState([]);
-  const [typedItems, setTypedItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([])
   const [boundBox, setBoundBox] = useState({x1: 0, x2: 0, y1: 0, y2: 0 })
-  const registerSelectedItem = useCallback((ref, props) => {
-    setTypedItems(oldItems => !oldItems.find(el => el.ref.current === ref.current) ? [...oldItems, {ref, props}] : oldItems)
-  }, []);
 
-  const registerSelected = useCallback(({ref, props}) => {
-    setItems(oldItems => !oldItems.find(el => el.ref.current === ref.current) ? [...oldItems, {ref, props}] : oldItems);
-  }, []);
+  const updateProps = (list = [], ref, props) => {
+    list.forEach((item) => {
+      if (item.ref.current === ref.current) {
+        if (!isEqual(item.props, props)) {
+          item.props = props
+        }
+      }
+    })
+    return list
+  }
+  const registerSelectedItem = useCallback((ref, props) => {
+    setSelectedItems(oldItems => !oldItems.find(el => el.ref.current === ref.current) ? [...oldItems, { ref, props }] : updateProps(oldItems, ref, props))
+  }, [])
 
   const registerSelectedMultiple = useCallback((list) => {
     setItems(list);
@@ -47,22 +56,25 @@ export default function App() {
     setBoundsValue({ x1, x2, y1, y2 })
   }, [setBoundsValue])
 
-  const doObjectCollide = () => {
-    const { offsetTop: top, offsetLeft: left, offsetWidth: width, offsetHeight: height } = ref.current && ref.current
-    const items = typedItems.filter(item => {
+  const doObjectCollide = useCallback(() => {
+    const { top, left, width, height } = ref.current && ref.current.getBoundingClientRect()
+    const items = selectedItems.filter(item => {
       if (!item || !item.ref || !item.ref.current) return false
       const { ref } = item
-      const { offsetTop: itemTop, offsetLeft: itemLeft, offsetWidth: itemWidth, offsetHeight: itemHeigth } = ref.current
+      const { top: itemTop, left: itemLeft, width: itemWidth, height: itemHeight } = ref.current.getBoundingClientRect()
       if (itemLeft < left + width &&
         itemLeft + itemWidth > left &&
         itemTop < top + height &&
-        top + height > itemTop){
+        top + height > itemTop &&
+        itemTop + (itemHeight || 0) > top){
           return true
         }
         return false
     })
     registerSelectedMultiple(items)
-  }
+  }, [registerSelectedMultiple, selectedItems])
+
+  const verifyCollide = debounce(doObjectCollide, 300)
 
   const onMouseUp = useCallback(ev => {
     ev.stopPropagation();
@@ -79,19 +91,19 @@ export default function App() {
   const onMouseMove = useCallback((ev) => {
     ev.stopPropagation();
     if (isSelecting) {
-      doObjectCollide()
+      verifyCollide()
       updateBoundBox({...boundBox, x2: ev.clientX, y2: ev.clientY})
     }
-  }, [isSelecting, updateBoundBox, registerSelected, boundBox, typedItems])
+  }, [isSelecting, updateBoundBox, boundBox, verifyCollide])
 
   const onMouseDown = useCallback(ev => {
     const { target, ...rest } = ev
     setItems([])
     ev.stopPropagation();
     setSelecting(true)
-    doObjectCollide()
+    verifyCollide()
     updateBoundBox({ ...boundBox, x1: rest.clientX, y1: rest.clientY })
-  }, [updateBoundBox, registerSelected, boundBox, typedItems])
+  }, [updateBoundBox, boundBox, verifyCollide])
 
   useEffect(() => {
     // in case the event ends outside the box

@@ -6,6 +6,7 @@
 .container {
   display: flex;
   flex-wrap: nowrap;
+  flex-direction: row;
 }
 .item {
   display: "flex";
