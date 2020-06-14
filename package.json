@@ -4,25 +4,49 @@
   "description": "",
   "keywords": [],
   "homepage": "http://evandro18.github.io/select-area",
-  "main": "src/index.js",
-  "dependencies": {
-    "clsx": "^1.0.4",
-    "lodash": "^4.17.15",
-    "react": "16.12.0",
-    "react-dom": "16.12.0",
-    "react-scripts": "3.0.1"
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "jsnext:main": "dist/index.es.js",
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "react": "16.13.0",
+    "react-dom": "16.13.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.8.6",
+    "@babel/preset-env": "^7.8.6",
+    "@babel/preset-react": "^7.8.3",
+    "@rollup/plugin-commonjs": "^11.0.2",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "clsx": "^1.0.4",
+    "flow-bin": "^0.119.1",
     "gh-pages": "^2.2.0",
+    "lodash": "^4.17.15",
+    "react": "16.13.0",
+    "react-dom": "16.13.0",
+    "react-scripts": "3.0.1",
+    "rollup": "^1.32.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-css-only": "^2.0.0",
+    "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-peer-deps-external": "^2.2.2",
+    "rollup-plugin-postcss": "^2.1.1",
+    "rollup-plugin-uglify": "^6.0.4",
+    "rollup-plugin-url": "^3.0.1",
     "typescript": "3.3.3"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "flow": "flow",
+    "build": "rollup -c"
   },
   "browserslist": [
     ">0.2%",
